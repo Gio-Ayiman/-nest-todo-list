@@ -1,19 +1,34 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EntityNotFoundException } from 'src/core/exceptions/entity-not-found.exception';
+import { Repository } from 'typeorm';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
+import { Todo } from './entities/todo.entity';
 
 @Injectable()
 export class TodoService {
+
+  constructor(
+    @InjectRepository(Todo) 
+    private todoRepo: Repository<Todo>,
+  ) {}
+
   create(createTodoDto: CreateTodoDto) {
-    return 'This action adds a new todo';
+    this.todoRepo.save(createTodoDto);
+    return createTodoDto;
   }
 
   findAll() {
-    return `This action returns all todo`;
+    return this.todoRepo.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} todo`;
+  async findOne(id: number) {
+    let todo = await this.todoRepo.findOneBy({id});
+    
+    if(!todo) throw new EntityNotFoundException(); 
+
+    return todo;
   }
 
   update(id: number, updateTodoDto: UpdateTodoDto) {
